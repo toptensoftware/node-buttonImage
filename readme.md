@@ -61,6 +61,8 @@ Note: the properties of each state are merged over the base button image
 properties so you only need to define the settings that are different
 for that state.
 
+
+
 ## Invalidation
 
 The `onInvalidate` method of the `ButtonImage` class is called if any
@@ -89,6 +91,7 @@ bi.states.checked.backColor = "green";
 // This will trigger invalidation:
 bi.state = "checked";
 ```
+
 
 
 ## Image Properties
@@ -128,12 +131,27 @@ Note this virtual size is independent of an SVG sizing.  SVG files are always
 rendered to fit the renderSize multiplied by the svgScale.
 
 
+
 ## Color Values
 
 All color values are CSS color values.  
 
 eg: "red", "#FF0000", "#F00" etc..
 
+
+## Rendered Image Caching
+
+The `ButtonImage` class caches the images returned from the `render()` method and
+returns the same result for subsequent requests for the same size and state.
+
+If any of the `ButtonImage`'s properties are changed, the cache is discarded.
+
+The cache maintains one rendered image per-state.  Requesting the same image state
+at the same size will return the cached image.  Requesting a different size will
+discard the last cached image and cache the result of the new rendering.
+
+ie: if rendering the same button to multiple devices it's best to use multiple
+`ButtonImage` instances, one for each device.
 
 
 ## Built-in Icons
@@ -152,6 +170,38 @@ let bi = new ButtonImage({
 ```
 
 See the [images](./images/) folder for the list of available icons.
+
+
+## The `drawButton` Function
+
+Instead of using the `ButtonImage` class, images can be rendered directly
+using the `drawButton` function.
+
+```js
+import { drawButton } from "@toptensoftware/node-buttonImage";
+let img = drawButton(72, 72, {
+    // same settings as ButtonImage class
+});
+```
+
+
+
+## Material Icons
+
+Google's material icons are a great resource for icon images (and most of the 
+built-in icons come from there).  However... they're generally oversized
+for hardware devices and need to be scaled down.
+
+This can be done using the `svgScale` property, or  the scaling can be baked into 
+the svg by adjusting the original Material icon `svg` node with:
+
+`
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="-144 -1104 1248 1248" width="24px" fill="#848484">
+`
+
+Note: this reduces the size of the icon (by adjusting the viewBox) and sets the 
+fill color (to #848484) so the `svgForeColor` property can be used to change the 
+icon color.
 
 
 
