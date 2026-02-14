@@ -26,8 +26,8 @@ import { drawText } from "./drawText.js";
 export async function drawButton(width, height, options)
 {
     let virtualSize = options.virtualSize ?? { width: 72, height: 72 };
-    let scaleX = width / options.virtualSize.width;
-    let scaleY = height / options.virtualSize.height;
+    let scaleX = width / virtualSize.width;
+    let scaleY = height / virtualSize.height;
 
     // Render background
     let background = sharp({

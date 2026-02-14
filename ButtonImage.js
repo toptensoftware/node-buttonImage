@@ -7,8 +7,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export class ButtonImage
 {
-    constructor()
+    constructor(options)
     {
+        if (options)
+        {
+            Object.assign(this, options);
+        }
     }
 
     #backColor = "black";
@@ -35,9 +39,15 @@ export class ButtonImage
 
     async render(width, height)
     {
-        if (!this.#rendered)
-            this.#rendered = await drawButton(width, height, this);
-        return this.#rendered;
+        if (!this.#rendered || this.#rendered.width != width || this.#rendered.height != height)
+        {
+            this.#rendered = {
+                image: await drawButton(width, height, this),
+                width,
+                height,
+            }
+        }
+        return this.#rendered.image;
     }
 
     get backColor()
