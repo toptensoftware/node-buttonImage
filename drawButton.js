@@ -17,6 +17,7 @@ import { drawText } from "./drawText.js";
  * @param {string} [options.textColor] - text color
  * @param {string} [options.font] - text font (with size in virtual px)
  * @param {number} [options.textPadding] - padding around the text (in virtual units)
+ * @param {number} [options.textLineSpacing] - scaling factor for line spacing
  * @param {"left"|"center"|"right"} [options.textAlign] - Horizontal alignment (default "center")
  * @param {"top"|"center"|"bottom"} [options.textVAlign] - Vertical alignment (default "center")
  * @param {number} [options.textTranslate] - optional .x and .y translation of text (in virtual px)
@@ -97,6 +98,7 @@ export async function drawButton(width, height, options)
             padding: padding,
             textAlign: options.textAlign,
             verticalAlign: options.textVAlign,
+            lineSpacing: options.textLineSpacing,
             translateX: (options.textTranslate?.x ?? 0) * scaleX,
             translateY: (options.textTranslate?.y ?? 0) * scaleY,
         });
@@ -116,5 +118,8 @@ export async function drawButton(width, height, options)
 
     // Composite
     return await background
-        .composite(compOps);
+        .composite(compOps)
+        .removeAlpha()
+        .raw()
+        .toBuffer();
 }

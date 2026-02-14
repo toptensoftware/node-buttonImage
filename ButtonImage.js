@@ -15,39 +15,105 @@ export class ButtonImage
         }
     }
 
+    #state = "normal";
+    #virtualSize = { width: 72, height: 72 };
     #backColor = "black";
     #svgForeColor = null;
     #svgFile;
     #svgCode;
     #svgScale = 1.0;
     #svgText = null;
+    #svgTranslate = null;
     #text = null;
     #textColor = "white";
     #textAlign = "center";
     #textVAlign = "center";
     #font = "bold 16px sans-serif";
-    #lineHeight = null;
+    #textLineSpacing = 1;
     #textPadding = 3;
     #textTranslate = null;
-    #rendered = null;
+    #renderCache = new Map();
     
     #invalidate()
     {
-        this.#rendered = null;
+        this.#renderCache.clear();
         this.onInvalidate?.();
     }
 
     async render(width, height)
     {
-        if (!this.#rendered || this.#rendered.width != width || this.#rendered.height != height)
+        // Work out resolved stae
+        let rs = this.resolvedState;
+
+        // Check if have cached image at correct size
+        let rendered = this.#renderCache.get(rs);
+        if (!rendered || rendered.width != width || rendered.height != height)
         {
-            this.#rendered = {
-                image: await drawButton(width, height, this),
+            // What to render
+            let bi = this;
+
+            // Override with active state?
+            if (rs != "normal")
+            {
+                bi = Object.assign(cloneWithAccessorValues(this), this.states[rs]);
+            }
+
+            // Render it
+            rendered = {
+                image: await drawButton(width, height, bi),
                 width,
                 height,
             }
+
+            // Cache it
+            this.#renderCache.set(rs, rendered);
         }
-        return this.#rendered.image;
+
+        return rendered.image;
+    }
+
+    get state()
+    {
+        return this.#state;
+    }
+    
+    set state(value)
+    {
+        if (this.#state != value)
+        {
+            let oldResolvedState = this.resolvedState;
+            this.#state = value;
+            if (this.resolvedState != oldResolvedState)
+            {
+                // NB: Invalidate button but not render cache
+                this.onInvalidate?.();
+            }
+        }
+    }
+
+    get resolvedState()
+    {
+        if (!this.states)
+            return "normal";
+
+        if (this.states[this.#state] !== undefined)
+            return this.#state;
+
+        return "normal";
+    }
+
+    get virtualSize()
+    {
+        return this.#virtualSize;
+    }
+
+    set virtualSize(value)
+    {
+        if (this.#virtualSize != value)
+        {
+            this.#virtualSize = value;
+            this.#invalidate();
+        }
     }
 
     get backColor()
@@ -147,6 +213,17 @@ export class ButtonImage
         }
     }
 
+    get svgTranslate()
+    {
+        return this.#svgTranslate;
+    }
+
+    set svgTranslate(value)
+    {
+        this.#svgTranslate = value;
+        this.#invalidate();
+    }
+
     get text()
     {
         return this.#text;
@@ -217,16 +294,16 @@ export class ButtonImage
         }
     }
 
-    get lineHeight()
+    get textLineSpacing()
     {
-        return this.#lineHeight;
+        return this.#textLineSpacing;
     }
 
-    set lineHeight(value)
+    set textLineSpacing(value)
     {
-        if (this.#lineHeight != value)
+        if (this.#textLineSpacing != value)
         {
-            this.#lineHeight = value;
+            this.#textLineSpacing = value;
             this.#invalidate();
         }
     }
@@ -314,4 +391,21 @@ export class Button extends ButtonImage
             this.#device.invalidateButton(this);
         }
     }
+}
+
+function cloneWithAccessorValues(obj) {
+    let clone = {};
+    let proto = obj;
+    
+    // Walk up the prototype chain
+    while (proto && proto !== Object.prototype) {
+        for (let key of Object.getOwnPropertyNames(proto)) {
+            if (!(key in clone)) {
+                clone[key] = obj[key];  // This will invoke getters
+            }
+        }
+        proto = Object.getPrototypeOf(proto);
+    }
+    
+    return clone;
 }
