@@ -1,6 +1,6 @@
-# node-winkeyhook
+# node-buttonImage
 
-A library for generating button images for hardware devices such as StreamDeck.
+A library for generating button images for StreamDeck and similar devices
 
 ## Installation
 
