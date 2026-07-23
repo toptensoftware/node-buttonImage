@@ -81,10 +81,15 @@ export function drawText(
         const metrics = ctx.measureText(testLine);
         if (metrics.width > hSpace)
         {
-            if (line) 
+            if (line)
             {
                 lines.push(line);
                 line = words[i];
+            }
+            else
+            {
+                lines.push(words[i]);
+                line = "";
             }
         }
         else
