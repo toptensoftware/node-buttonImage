@@ -40,29 +40,28 @@ export class ButtonImage
         this.onInvalidate?.();
     }
 
-    async render(width, height)
+    async render(width, height, channels = 3)
     {
         // Work out resolved stae
         let rs = this.resolvedState;
 
         // Check if have cached image at correct size
         let rendered = this.#renderCache.get(rs);
-        if (!rendered || rendered.width != width || rendered.height != height)
+        if (!rendered || rendered.width != width || rendered.height != height || rendered.channels != channels)
         {
-            // What to render
-            let bi = this;
-
-            // Override with active state?
-            if (rs != "normal")
-            {
-                bi = Object.assign(cloneWithAccessorValues(this), this.states[rs]);
-            }
+            // What to render (merging over active state settings, if any)
+            let bi = Object.assign(
+                cloneWithAccessorValues(this),
+                rs != "normal" ? this.states[rs] : null,
+                { channels }
+            );
 
             // Render it
             rendered = {
                 image: await drawButton(width, height, bi),
                 width,
                 height,
+                channels,
             }
 
             // Cache it

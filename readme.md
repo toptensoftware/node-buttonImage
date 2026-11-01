@@ -32,6 +32,16 @@ let img = await bi.render(72, 72);
 await device.fillKeyBuffer(buttonIndex, pixels);
 ```
 
+To render an image with an alpha channel, pass `4` as the third `channels`
+argument (default is `3`):
+
+```js
+// Returns a raw rgba (4-channel) image buffer
+let img = await bi.render(72, 72, 4);
+```
+
+Use `backColor: "transparent"` (or any CSS color with alpha) for a transparent background.
+
 
 ## Button States
 
@@ -147,7 +157,7 @@ returns the same result for subsequent requests for the same size and state.
 If any of the `ButtonImage`'s properties are changed, the cache is discarded.
 
 The cache maintains one rendered image per-state.  Requesting the same image state
-at the same size will return the cached image.  Requesting a different size will
+at the same size and channel count will return the cached image.  Requesting a different size (or channel count) will
 discard the last cached image and cache the result of the new rendering.
 
 ie: if rendering the same button to multiple devices it's best to use multiple
@@ -180,7 +190,8 @@ using the `drawButton` function.
 ```js
 import { drawButton } from "@toptensoftware/node-buttonImage";
 let img = drawButton(72, 72, {
-    // same settings as ButtonImage class
+    // same settings as ButtonImage class, plus:
+    channels: 4,    // 3 = rgb (default), 4 = rgba
 });
 ```
 

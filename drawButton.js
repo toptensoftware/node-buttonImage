@@ -21,7 +21,8 @@ import { drawText } from "./drawText.js";
  * @param {"left"|"center"|"right"} [options.textAlign] - Horizontal alignment (default "center")
  * @param {"top"|"center"|"bottom"} [options.textVAlign] - Vertical alignment (default "center")
  * @param {number} [options.textTranslate] - optional .x and .y translation of text (in virtual px)
- * @returns {object} Sharp object
+ * @param {3|4} [options.channels] - 3 for opaque RGB, 4 for RGBA with alpha (default 3)
+ * @returns {Promise<Buffer>} Raw pixel buffer (RGB or RGBA depending on channels)
  */
 
 export async function drawButton(width, height, options)
@@ -117,9 +118,13 @@ export async function drawButton(width, height, options)
     }
 
     // Composite
-    return await background
-        .composite(compOps)
-        .removeAlpha()
-        .raw()
-        .toBuffer();
+    let channels = options.channels ?? 3;
+    if (channels != 3 && channels != 4)
+        throw new Error(`channels must be 3 or 4 (got ${channels})`);
+
+    let img = background.composite(compOps);
+    if (channels == 3)
+        img = img.removeAlpha();
+
+    return await img.raw().toBuffer();
 }
