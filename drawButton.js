@@ -52,7 +52,7 @@ export async function drawButton(width, height, options)
         // Insert replacement text
         if (options.svgText)
         {
-            svg = replace(/\$\(x\)/g, options.svgText)
+            svg = svg.replace(/\$\(x\)/g, options.svgText);
         }
 
         // Replace color
@@ -71,8 +71,8 @@ export async function drawButton(width, height, options)
 
         compOps.push({
             input: svgBuf.data,
-            top: Math.round((width - svgBuf.info.width) / 2 + (options.svgTranslate?.y ?? 0) * scaleY),
-            left: Math.round((height - svgBuf.info.height) / 2 + (options.svgTranslate?.x ?? 0) * scaleX),
+            top: Math.round((height - svgBuf.info.height) / 2 + (options.svgTranslate?.y ?? 0) * scaleY),
+            left: Math.round((width - svgBuf.info.width) / 2 + (options.svgTranslate?.x ?? 0) * scaleX),
         });
     }
 
