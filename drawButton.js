@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { getSvgSize, scaleFont } from "./utils.js";
+import { scaleFont } from "./utils.js";
 import { drawText } from "./drawText.js";
 
 /**
@@ -61,19 +61,43 @@ export async function drawButton(width, height, options)
             svg = svg.replace(/#848484/g, options.svgForeColor);
         }
 
-        // Work out render density (just use height)
-        let svgSize = getSvgSize(options.svgCode);
-        let density = 72 * options.svgScale * height / svgSize.height ?? svgSize.viewBox[3] ?? height;
+        // Work out render density so the svg's height = button height * svgScale.
+        // sharp reports an svg's natural size at 72 dpi, which covers svgs
+        // sized by width/height attributes or by viewBox alone.
+        let svgMeta = await sharp(Buffer.from(svg)).metadata();
+        let density = 72 * (options.svgScale ?? 1) * height / svgMeta.height;
 
         // Render SVG pixels
         let svgBuf = await sharp(Buffer.from(svg), { density }).toBuffer({ resolveWithObject: true });
+        let svgW = svgBuf.info.width;
+        let svgH = svgBuf.info.height;
 
+        // Position (centered, plus translation)
+        let left = Math.round((width - svgW) / 2 + (options.svgTranslate?.x ?? 0) * scaleX);
+        let top = Math.round((height - svgH) / 2 + (options.svgTranslate?.y ?? 0) * scaleY);
 
-        compOps.push({
-            input: svgBuf.data,
-            top: Math.round((height - svgBuf.info.height) / 2 + (options.svgTranslate?.y ?? 0) * scaleY),
-            left: Math.round((width - svgBuf.info.width) / 2 + (options.svgTranslate?.x ?? 0) * scaleX),
-        });
+        // sharp can't composite an image larger than the background, so crop
+        // the rendered pixels to the part that falls on the button
+        let x0 = Math.max(0, -left);
+        let y0 = Math.max(0, -top);
+        let x1 = Math.min(svgW, width - left);
+        let y1 = Math.min(svgH, height - top);
+        if (x1 > x0 && y1 > y0)
+        {
+            let input = svgBuf.data;
+            if (x0 > 0 || y0 > 0 || x1 < svgW || y1 < svgH)
+            {
+                input = await sharp(svgBuf.data)
+                    .extract({ left: x0, top: y0, width: x1 - x0, height: y1 - y0 })
+                    .toBuffer();
+            }
+
+            compOps.push({
+                input,
+                left: left + x0,
+                top: top + y0,
+            });
+        }
     }
 
     // Render text
