@@ -1,4 +1,5 @@
 import { createCanvas } from "canvas";
+import { wrapLines } from "./wrapLines.js";
 
 /**
  * Draw wrapped text on a transparent canvas with alignment options
@@ -58,10 +59,7 @@ export function drawText(
     ctx.textAlign = textAlign;       // left, center, right
     ctx.textBaseline = "top";        // We'll handle vertical alignment manually
 
-    // Word wrapping
-    const words = text.split(" ");
-    const lines = [];
-    let line = "";
+    const lines = wrapLines(text, s => ctx.measureText(s).width, hSpace);
 
     let metrics = ctx.measureText("Xy");
     let lineHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
@@ -73,30 +71,7 @@ export function drawText(
         lineHeight *= 1.2;
 
     if (options.lineSpacing)
-        lineHeight * options.lineSpacing;
-
-    for (let i = 0; i < words.length; i++) 
-    {
-        const testLine = line ? line + " " + words[i] : words[i];
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > hSpace)
-        {
-            if (line)
-            {
-                lines.push(line);
-                line = words[i];
-            }
-            else
-            {
-                lines.push(words[i]);
-                line = "";
-            }
-        }
-        else
-            line = testLine;
-    }
-    if (line) 
-        lines.push(line);
+        lineHeight *= options.lineSpacing;
 
     // Calculate starting Y based on vertical alignment
     const totalHeight = lines.length * lineHeight;
